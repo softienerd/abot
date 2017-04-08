@@ -8,6 +8,8 @@ using System.Net;
 using AngleSharp;
 using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
+using System.Text;
+using System.Web;
 
 namespace Abot.Poco
 {
@@ -150,6 +152,27 @@ namespace Abot.Poco
             try
             {
                 hapDoc.LoadHtml(Content.Text);
+                bool start = false;
+                StringBuilder sb = new StringBuilder();
+                foreach (HtmlNode node in hapDoc.DocumentNode.SelectNodes("//text()"))
+                {
+                    if (node.InnerText == "[Table of Contents]")
+                    {
+                        start = !start;
+                    }
+                    if (start)
+                    {
+                        sb.Append(node.InnerText);
+                    }
+                }
+                if (sb.Length > 0)
+                {
+                    sb.Insert(0, "<h1>" + this.Uri.Segments[Uri.Segments.Length - 1].Replace("/", "") + "</h1>");
+                    string str = HttpUtility.HtmlDecode(sb.ToString()).Replace("\n\n", "<p>");
+                    str = str.Replace("\n \n", "<p>");
+                    str = str.Replace("\n", "<p>");
+                    System.IO.File.WriteAllText("RTW" + this.Uri.Segments[Uri.Segments.Length - 1].Replace("/", "") + ".html", str);
+                }
             }
             catch (Exception e)
             {

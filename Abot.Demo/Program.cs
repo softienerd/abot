@@ -7,19 +7,43 @@ namespace Abot.Demo
 {
     class Program
     {
+
+        private const string WEBSITE = "http://volarenovels.com/release-that-witch/"; //include http://
+
+        private static CrawlDecision ShouldCrawlPage(PageToCrawl pageToCrawl, CrawlContext crawlContext)
+        {
+
+            if (pageToCrawl.Uri.AbsoluteUri.Contains("volarenovels.com/release-that-witch/"))
+            {
+                String segment = pageToCrawl.Uri.Segments[pageToCrawl.Uri.Segments.Length - 1];
+                if (segment.Contains("rw-chapter-"))
+                {
+                    segment = segment.Replace("/", "").Substring("rw-chapter-".Length);
+                    if (Convert.ToInt32(segment) > 186)
+                    {
+                        return new CrawlDecision { Allow = true, Reason = "Is a chapter" };
+                    }
+                }
+            }
+            if (pageToCrawl.Uri.AbsoluteUri == ("http://volarenovels.com/release-that-witch/"))
+                return new CrawlDecision { Allow = true, Reason = "Is content" };
+
+            return new CrawlDecision { Allow = false, Reason = "Is not a chapter" };
+        }
+
         static void Main(string[] args)
         {
             log4net.Config.XmlConfigurator.Configure();
             PrintDisclaimer();
 
-            Uri uriToCrawl = GetSiteToCrawl(args);
+            Uri uriToCrawl = new Uri(WEBSITE);//GetSiteToCrawl(args);
 
             IWebCrawler crawler;
 
             //Uncomment only one of the following to see that instance in action
             crawler = GetDefaultWebCrawler();
             //crawler = GetManuallyConfiguredWebCrawler();
-            //crawler = GetCustomBehaviorUsingLambdaWebCrawler();
+            crawler = GetCustomBehaviorUsingLambdaWebCrawler();
 
             //Subscribe to any of these asynchronous events, there are also sychronous versions of each.
             //This is where you process data about specific events of the crawl
@@ -37,6 +61,7 @@ namespace Abot.Demo
             //Not enough data being logged? Change the app.config file's log4net log level from "INFO" TO "DEBUG"
 
             PrintDisclaimer();
+            Console.ReadKey();
         }
 
         private static IWebCrawler GetDefaultWebCrawler()
@@ -54,8 +79,8 @@ namespace Abot.Demo
             config.IsExternalPageLinksCrawlingEnabled = false;
             config.IsRespectRobotsDotTextEnabled = false;
             config.IsUriRecrawlingEnabled = false;
-            config.MaxConcurrentThreads = 10;
-            config.MaxPagesToCrawl = 10;
+            config.MaxConcurrentThreads = 2;
+            config.MaxPagesToCrawl = 5000;
             config.MaxPagesToCrawlPerDomain = 0;
             config.MinCrawlDelayPerDomainMilliSeconds = 1000;
 
@@ -79,10 +104,7 @@ namespace Abot.Demo
             //NOTE: This is lambda is run after the regular ICrawlDecsionMaker.ShouldCrawlPage method is run.
             crawler.ShouldCrawlPage((pageToCrawl, crawlContext) =>
             {
-                if (pageToCrawl.Uri.AbsoluteUri.Contains("ghost"))
-                    return new CrawlDecision { Allow = false, Reason = "Scared of ghosts" };
-
-                return new CrawlDecision { Allow = true };
+                return ShouldCrawlPage(pageToCrawl, crawlContext);
             });
 
             //Register a lambda expression that will tell Abot to not download the page content for any page after 5th.
@@ -90,10 +112,7 @@ namespace Abot.Demo
             //NOTE: This lambda is run after the regular ICrawlDecsionMaker.ShouldDownloadPageContent method is run
             crawler.ShouldDownloadPageContent((crawledPage, crawlContext) =>
             {
-                if (crawlContext.CrawledCount >= 5)
-                    return new CrawlDecision { Allow = false, Reason = "We already downloaded the raw page content for 5 pages" };
-
-                return new CrawlDecision { Allow = true };
+                return ShouldCrawlPage(crawledPage, crawlContext);
             });
 
             //Register a lambda expression that will tell Abot to not crawl links on any page that is not internal to the root uri.
