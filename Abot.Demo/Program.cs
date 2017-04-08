@@ -6,8 +6,7 @@ using System;
 namespace Abot.Demo
 {
     class Program
-    {
-
+    { 
         private const string WEBSITE = "http://volarenovels.com/release-that-witch/"; //include http://
 
         private static CrawlDecision ShouldCrawlPage(PageToCrawl pageToCrawl, CrawlContext crawlContext)
