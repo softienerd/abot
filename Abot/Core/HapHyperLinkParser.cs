@@ -22,28 +22,6 @@ namespace Abot.Core
         {
         }
 
-        [Obsolete("Use the constructor that accepts a configuration object instead")]
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="isRespectMetaRobotsNoFollowEnabled">Whether parser should ignore pages with meta no robots</param>
-        /// <param name="isRespectAnchorRelNoFollowEnabled">Whether parser should ignore links with rel no follow</param>
-        /// <param name="cleanURLFunc">Function to clean the url</param>
-        /// <param name="isRespectUrlNamedAnchorOrHashbangEnabled">Whether parser should consider named anchor and/or hashbang '#' character as part of the url</param>
-        public HapHyperLinkParser(bool isRespectMetaRobotsNoFollowEnabled,
-                                  bool isRespectAnchorRelNoFollowEnabled,
-                                  Func<string, string> cleanURLFunc = null,
-                                  bool isRespectUrlNamedAnchorOrHashbangEnabled = false)
-            :this(new CrawlConfiguration
-            {
-                IsRespectMetaRobotsNoFollowEnabled = isRespectMetaRobotsNoFollowEnabled,
-                IsRespectUrlNamedAnchorOrHashbangEnabled = isRespectUrlNamedAnchorOrHashbangEnabled,
-                IsRespectAnchorRelNoFollowEnabled = isRespectAnchorRelNoFollowEnabled
-            }, cleanURLFunc)
-        {
-            
-        }
-
         public HapHyperLinkParser(CrawlConfiguration config, Func<string, string> cleanURLFunc)
             : base(config, cleanURLFunc)
         {
@@ -121,7 +99,7 @@ namespace Abot.Core
             {
                 dentitizedHref = HtmlEntity.DeEntitize(hrefValue);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 _logger.InfoFormat("Error dentitizing uri: {0} This usually means that it contains unexpected characters", hrefValue);
             }
